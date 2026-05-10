@@ -22,9 +22,7 @@ type WeatherData = {
     speed: number;
   };
 };
-
-function App() {
-  const API_KEY = import.meta.env.VITE_WEATHER_API_KEY;
+const API_KEY = import.meta.env.VITE_WEATHER_API_KEY;
   const BASE = "https://api.openweathermap.org/data/2.5";
   const country = [
     "London",
@@ -36,6 +34,9 @@ function App() {
     "Vietnam"
   ];
 
+function App() {
+  
+
   const [index, setIndex] = useState(0);
 
   const [time, setTime] = useState(new Date());
@@ -45,6 +46,13 @@ function App() {
     const timeinterval = setInterval(() => {
       setTime(new Date());
     }, 1000);
+
+    fetch(`${BASE}/weather?q=${country[0]}&appid=${API_KEY}&units=metric`)
+    .then(res => res.json())
+    .then(data => {
+      console.log(data);      
+      setApiData(data);
+    })
 
     const apifetch = setInterval(() => {
       setIndex((prev) => {
@@ -65,7 +73,7 @@ function App() {
       clearInterval(timeinterval);
       clearInterval(apifetch);
     };
-  },);
+  },[]);
 
   return (
     <>
@@ -79,6 +87,8 @@ function App() {
             <div>Country name: {apiData.name}</div>
             <div>Country temp: {apiData.main.temp}°C</div>
             <div>Country time: {apiData.timezone}</div>
+
+            <div className="text-l text-red-500">Please wait for 1 minute to see another countrys temperature</div>
           </>
         ) : (
           <div>Loading...</div>
