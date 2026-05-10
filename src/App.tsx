@@ -1,5 +1,5 @@
 import "./App.css";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 type WeatherData = {
   name: string;
@@ -23,57 +23,52 @@ type WeatherData = {
   };
 };
 const API_KEY = import.meta.env.VITE_WEATHER_API_KEY;
-  const BASE = "https://api.openweathermap.org/data/2.5";
-  const country = [
-    "London",
-    "Dhaka",
-    "United States of America",
-    "United Kingdom",
-    "Tokyo",
-    "China",
-    "Vietnam"
-  ];
+const BASE = "https://api.openweathermap.org/data/2.5";
+const country = [
+  "London",
+  "Dhaka",
+  "United States of America",
+  "United Kingdom",
+  "Tokyo",
+  "China",
+  "Vietnam",
+];
 
 function App() {
-  
-
-  const [index, setIndex] = useState(0);
+  const indexRef = useRef(0);
 
   const [time, setTime] = useState(new Date());
   const [apiData, setApiData] = useState<WeatherData | null>(null);
+
+  const fetchApi = (cityIndex: number) => {
+  fetch(`${BASE}/weather?q=${country[cityIndex]}&appid=${API_KEY}&units=metric`)
+    .then(res => res.json())
+    .then(data => {
+      console.log(data)
+      setApiData(data)
+    })
+    .catch(err => {
+      console.log("something went wrong", err)
+    })
+}
 
   useEffect(() => {
     const timeinterval = setInterval(() => {
       setTime(new Date());
     }, 1000);
 
-    fetch(`${BASE}/weather?q=${country[0]}&appid=${API_KEY}&units=metric`)
-    .then(res => res.json())
-    .then(data => {
-      console.log(data);      
-      setApiData(data);
-    })
+    fetchApi(0);
 
     const apifetch = setInterval(() => {
-      setIndex((prev) => {
-        const nextIndex = (prev + 1) % country.length;
-        fetch(
-          `${BASE}/weather?q=${country[nextIndex]}&appid=${API_KEY}&units=metric`,
-        )
-          .then((res) => res.json())
-          .then((data) => {
-            console.log(data); 
-            setApiData(data);
-          });
-        return nextIndex;
-      });
+      indexRef.current = (indexRef.current + 1) % country.length;
+      fetchApi(indexRef.current);
     }, 60000);
 
     return () => {
       clearInterval(timeinterval);
       clearInterval(apifetch);
     };
-  },[]);
+  }, []);
 
   return (
     <>
@@ -88,7 +83,9 @@ function App() {
             <div>Country temp: {apiData.main.temp}°C</div>
             <div>Country time: {apiData.timezone}</div>
 
-            <div className="text-l text-red-500">Please wait for 1 minute to see another countrys temperature</div>
+            <div className="text-l text-red-500">
+              Please wait for 1 minute to see another countrys temperature
+            </div>
           </>
         ) : (
           <div>Loading...</div>
